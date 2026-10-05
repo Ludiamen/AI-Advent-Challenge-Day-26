@@ -11404,7 +11404,10 @@ class ЛокальныйКаталог(unittest.TestCase):
         м = catalog.get("loc-qwen3")
         self.assertTrue(м.local and м.has_key and м.free)
         self.assertEqual((м.api_key, м.price_in, м.price_out, м.price_text), ("", 0.0, 0.0, "локально, бесплатно"))
-        self.assertTrue(м.base_url.startswith("http://") and м.base_url.endswith(":11434"))
+        # Адрес — из OLLAMA_HOST (по умолчанию 127.0.0.1:11434), а не зашит в тест:
+        # у человека Ollama может слушать другой адрес.
+        self.assertEqual(м.base_url, catalog._OLLAMA)
+        self.assertTrue(м.base_url.startswith(("http://", "https://")))
         self.assertEqual(м.context_window, catalog.LOCAL_CTX)
         self.assertEqual(set(catalog.local_models()), {"loc-qwen35", "loc-qwen3", "loc-qwen17", "loc-gemma3", "loc-phi4"})
         self.assertFalse(catalog.get("ds-flash").local)
@@ -11875,7 +11878,7 @@ class КонсольИВебДня26(unittest.TestCase):
                 ["--локально", "Столица Франции?", "--рядом", "--модель", "loc-qwen3"]))
         self.assertEqual(код, 0)
         текст = вывод.getvalue()
-        for кусок in ("Qwen 3 4B (локально) · локально, http://127.0.0.1:11434", "Париж",
+        for кусок in (f"Qwen 3 4B (локально) · локально, {catalog._OLLAMA}", "Париж",
                       "до первого токена 4.0 с", "DeepSeek V4 Flash · облако", "Рядом: до первого токена 4.0 с против 0.4 с",
                       "цена $0 против $0.0001"):
             self.assertIn(кусок, текст)
